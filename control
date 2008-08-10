@@ -1,0 +1,11 @@
+Package: erlang-facebook
+Version: 0.1r1
+Section: web 
+Priority: optional
+Architecture: all
+Essential: no
+Depends: erlang
+Installed-Size: 1024
+Maintainer: Nick Gerakines <nick@gerakines.net>
+Provides: erlang_facebook
+Description: A simple Facebook Platform API interface in Erlang
