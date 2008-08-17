@@ -78,8 +78,7 @@ handle_call({Method, Args}, _From, State) ->
     MethodArgs = [State#erlang_facebook.secret, [{"api_key", State#erlang_facebook.api_key} | Args]],
     Response = try apply(erlang_facebook, Method, MethodArgs)
     catch
-        X:Y ->
-            io:format("error: ~p:~p~n", [X, Y]),
+        _X:_Y ->
             {error, unsupported_method}
     end,
     {reply, Response, State#erlang_facebook{ lastcall = Now }};
@@ -125,6 +124,30 @@ custom(Secret, Args) ->
     Sig = create_signature(dict:from_list(CoreArgs), Secret),
     Url = build_url([{"sig", Sig} | CoreArgs]),
     submit_request(Url, fun parse_json/1).
+
+%% ---
+validate_args(Secret, Args, Sig) ->
+    FBArgs = collect_fb_args(Args, []),
+    NewSig = create_signature(dict:from_list(FBArgs), Secret),
+    Sig == NewSig.
+
+collect_fb_args([], Acc) -> Acc;
+collect_fb_args([{"fb_sig_" ++ Key, Value} | Args], Acc) ->
+    collect_fb_args(Args, [{Key, Value} | Acc]);
+collect_fb_args([_ | Args], Acc) ->
+    collect_fb_args(Args, Acc).
+
+from_args("fb_sig", Args) ->
+    case lists:keysearch("fb_sig", 1, Args) of
+        {value, {"fb_sig", Value}} -> Value;
+        _ -> none
+    end;
+from_args(Key, Args) ->
+    case lists:keysearch(Key, 1, Args) of
+        {value, {_, Value}} -> Value;
+        _ -> none
+    end.
+    
 
 %% ---
 build_url(Args) ->
@@ -178,3 +201,23 @@ build_querystring([{Key, Value} | Tail], []) ->
 build_querystring([{Key, Value} | Tail], Acc) ->
     NewAcc = lists:concat([Acc, "&", Key, "=", yaws_api:url_encode(Value)]),
     build_querystring(Tail, NewAcc).
+
+facebook_fun(Args) ->
+    FBArgs = collect_fb_args(Args, []),
+    facebook_fun(FBArgs, 1).
+
+facebook_fun(Args, 1) ->
+    fun (in_canvas) ->
+            case from_args("in_canvas", Args) of none -> false; _ -> true end;
+        (sig) ->
+            case from_args("fb_sig", Args) of none -> ""; Sig -> Sig end;
+        (friends) ->
+            case from_args("friends", Args) of none -> []; List -> string:tokens(List, ",") end;
+        (added) ->
+            case from_args("added", Args) of none -> false; _ -> true end;
+        (user) ->
+            case from_args("user", Args) of
+                none -> from_args("canvas_user", Args);
+                CU -> CU
+            end
+    end.
