@@ -142,7 +142,7 @@ from_args("fb_sig", Args) ->
         {value, {"fb_sig", Value}} -> Value;
         _ -> none
     end;
-from_args("fb_sig_" ++ Key, Args) ->
+from_args(Key, Args) ->
     case lists:keysearch("fb_sig_" ++ Key, 1, Args) of
         {value, {_, Value}} -> Value;
         _ -> none
