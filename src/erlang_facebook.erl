@@ -134,6 +134,8 @@ validate_args(Secret, Args, Sig) ->
 collect_fb_args([], Acc) -> Acc;
 collect_fb_args([{"fb_sig_" ++ Key, Value} | Args], Acc) ->
     collect_fb_args(Args, [{Key, Value} | Acc]);
+collect_fb_args([{"fb_sig", Value} | Args], Acc) ->
+    collect_fb_args(Args, [{"fb_sig", Value} | Acc]);
 collect_fb_args([_ | Args], Acc) ->
     collect_fb_args(Args, Acc).
 
@@ -143,7 +145,7 @@ from_args("fb_sig", Args) ->
         _ -> none
     end;
 from_args(Key, Args) ->
-    case lists:keysearch("fb_sig_" ++ Key, 1, Args) of
+    case lists:keysearch(Key, 1, Args) of
         {value, {_, Value}} -> Value;
         _ -> none
     end.
