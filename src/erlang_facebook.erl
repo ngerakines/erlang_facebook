@@ -76,8 +76,7 @@ handle_call({set_application, API, Secret}, _From, State) ->
 handle_call({Method, Args}, _From, State) ->
     Now = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
     MethodArgs = [State#erlang_facebook.secret, [{"api_key", State#erlang_facebook.api_key} | Args]],
-    Response = try apply(erlang_facebook, Method, MethodArgs)
-    catch
+    Response = try apply(erlang_facebook, Method, MethodArgs) catch
         _X:_Y ->
             {error, unsupported_method}
     end,
@@ -217,6 +216,8 @@ facebook_fun(Args, 1) ->
             case from_args("friends", Args) of none -> []; List -> string:tokens(List, ",") end;
         (added) ->
             case from_args("added", Args) of none -> false; _ -> true end;
+        (session) ->
+            from_args("session_key", Args);
         (user) ->
             case from_args("user", Args) of
                 none -> from_args("canvas_user", Args);
