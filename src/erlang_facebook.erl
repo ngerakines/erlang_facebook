@@ -120,10 +120,13 @@ users_isappuser(Secret, Args) ->
     submit_request(Url, fun parse_json/1).
 
 custom(Secret, Args) ->
+    Url = build_url([]),
+    io:format("Url: ~p~n", [Url]),
     CoreArgs = build_args(Args),
     Sig = create_signature(dict:from_list(CoreArgs), Secret),
-    Url = build_url([{"sig", Sig} | CoreArgs]),
-    submit_request(Url, fun parse_json/1).
+    Body = build_body([{"sig", Sig} | CoreArgs]),
+    io:format("Body: ~p~n", [Body]),
+    submit_request(Url, Body, fun parse_json/1).
 
 %% ---
 validate_args(Secret, Args, Sig) ->
@@ -162,6 +165,18 @@ build_args(Args) -> [
         {"format", "JSON"} | Args
     ].
 
+build_body([{FKey, FVal} | Args]) ->
+    list_to_binary(lists:flatten([ FKey, "=", FVal,
+          [ ["&", Key, "=", yaws_api:url_encode(lists:flatten(io_lib:format("~s",[Val])))] || {Key, Val} <- Args ]])).
+
+submit_request(Url, Body, ParseFun) ->
+    try http:request(post, {Url, [], "application/x-www-form-urlencoded", Body} , [], []) of
+        {ok, {_Status, _Headers, Body}} -> ParseFun(Body);
+        F -> {error, F}
+    catch
+        _:_ -> {error, something_caught}
+    end.
+
 submit_request(Url, ParseFun) ->
     try http:request(get, {Url, [{"User-Agent", ?USER_AGENT}]}, [], []) of
         {ok, {_Status, _Headers, Body}} -> ParseFun(Body);
@@ -182,7 +197,7 @@ create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
     PreHash = lists:concat([[begin
         Value = dict:fetch(Key, Dict),
-        lists:concat([Key, "=", yaws_api:url_encode(Value)])
+        lists:concat([Key, "=", Value])
     end || Key <- Keys], [Secret]]),
     hashme(PreHash).
 
