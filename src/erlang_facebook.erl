@@ -21,115 +21,164 @@
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 %% OTHER DEALINGS IN THE SOFTWARE.
 %% 
+%% Change Log:
+%% * v0.2 2008-11-15: ngerakines
+%%   - Substantial code rewrite and reorg.
+%%   - Move away from the gen_server model.
+%% 
 %% @author Nick Gerakines <nick@gerakines.net>
 %% @copyright 2008 Nick Gerakines
-%% @version 0.1r1
+%% @version 0.2
 %% @doc A simple Facebook Platform API interface in Erlang.
 %% @todo Add support for more Facebook Platform API methods.
-%% @todo Documentation.
-%% @todo Add xml response parsing support.
-%% @todo Export fewer things.
-%% @todo Sprinkle better error handling through module.
 -module(erlang_facebook).
--behaviour(gen_server).
-
 -author("Nick Gerakines <nick@gerakines.net>").
--version("0.1r1").
+-version("0.2").
 
--export([
-    init/1, terminate/2, code_change/3,
-    handle_call/3, handle_cast/2, handle_info/2
+-export([ %% API exports
+	application_getpublicinfo/3,
+	feed_publishuseraction/3,
+	profile_getinfo/3,
+	profile_setfbml/3,
+	profile_setinfo/3,
+	users_hasapppermission/3,
+	users_isappuser/3,
+	custom/4
 ]).
 
--compile(export_all).
+-export([ %% utility exports
+	facebook_fun/1,
+	validate_args/3
+]).
 
--record(erlang_facebook, {api_key, secret, lastcall}).
-
--define(USER_AGENT, "erlang_facebook/0.1").
-
-start() ->
-    inets:start(),
-    gen_server:start_link({global, ?MODULE}, ?MODULE, [], []).
-
-info() ->
-    gen_server:call({global, ?MODULE}, {info}, infinity).
-
-update(ApiKey, Secret) ->
-    gen_server:call({global, ?MODULE}, {set_application, ApiKey, Secret}, infinity).
-
-call(Method, Args) ->
-    gen_server:call({global, ?MODULE}, {Method, Args}, infinity).
-
-init(_) ->
-    {ok, #erlang_facebook{
-        api_key = "",
-        secret = "",
-        lastcall = 0
-    }}.
-
-handle_call({info}, _From, State) ->
-    {reply, State, State};
-
-handle_call({set_application, API, Secret}, _From, State) ->
-    {reply, ok, State#erlang_facebook{ api_key = API, secret = Secret }};
-
-handle_call({Method, Args}, _From, State) ->
-    Now = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-    MethodArgs = [State#erlang_facebook.secret, [{"api_key", State#erlang_facebook.api_key} | Args]],
-    Response = try apply(erlang_facebook, Method, MethodArgs) catch
-        _X:_Y ->
-            {error, unsupported_method}
-    end,
-    {reply, Response, State#erlang_facebook{ lastcall = Now }};
-
-handle_call(stop, _From, State) -> {stop, normalStop, State};
-
-handle_call(_, _From, State) -> {noreply, ok, State}.
+-define(USER_AGENT, "erlang_facebook/0.2").
 
 %% @private
-handle_cast(_Msg, State) -> {noreply, State}.
+%% @doc Returns the Request URL for the Facebook API.
+build_url(Args) ->
+    QueryString = build_querystring(Args),
+    lists:concat(["http://api.facebook.com/restserver.php", QueryString]).
 
 %% @private
-handle_info(_Info, State) -> {noreply, State}.
+%% @doc Returns a default list of Args used by the Facebook API.
+build_args(Args) -> [
+        {"call_id", integer_to_list(epochnow())},
+        {"v", "1.0"},
+        {"format", "JSON"} | Args
+    ].
+
+raw_request(Type, URI, Body) ->
+    {ok, Socket} = gen_tcp:connect("api.facebook.com", 80, [binary, {active, false}, {packet, 0}]),
+    Req = build_request(Type, URI, Body),
+    gen_tcp:send(Socket, Req),
+    {ok, Resp} = do_recv(Socket, []),
+    gen_tcp:close(Socket),
+    {ok,_, ResponseBody} = erlang:decode_packet(http, Resp, []),
+    parse_json(parse_response(ResponseBody)).
+
+do_recv(Sock, Bs) ->
+    case gen_tcp:recv(Sock, 0) of
+        {ok, B} ->
+            do_recv(Sock, [Bs | B]);
+        {error, closed} ->
+            {ok, erlang:iolist_to_binary(Bs)}
+    end.
+
+parse_response(<<13,10,13,10,Data/binary>>) -> binary_to_list(Data);
+parse_response(<<_X:1/binary,Data/binary>>) -> parse_response(Data).
+
+build_request(Type, URI, []) ->
+    list_to_binary(lists:concat([Type, " ", URI, " HTTP/1.0\r\nContent-Type: application/json\r\n\r\n"]));
+
+build_request(Type, URI, Body) ->
+    erlang:iolist_to_binary([
+        lists:concat([Type, " ", URI, " HTTP/1.0\r\n"
+            "Content-Length: ", erlang:iolist_size(Body), "\r\n"
+            "Content-Type: application/json\r\n\r\n"
+        ]),
+        Body
+    ]).
 
 %% @private
-terminate(_Reason, _State) -> ok.
+%% @doc Parse some json or return an error.
+parse_json(Body) ->
+    try mochijson2:decode(Body) of
+        Response -> Response
+    catch
+        _:_ -> {error, parse_error}
+    end.
 
 %% @private
-code_change(_OldVsn, State, _Extra) -> {ok, State}.
+%% @doc Create a signature from a dicationary of parameters.
+%% @todo Get rid of the dict dependancy.
+create_signature(Dict, Secret) ->
+    Keys = lists:sort(dict:fetch_keys(Dict)),
+    PreHash = lists:concat([[begin
+        Value = dict:fetch(Key, Dict),
+        lists:concat([Key, "=", mochiweb_util:quote_plus(Value)])
+    end || Key <- Keys], [Secret]]),
+    hashme(PreHash).
 
-%% ---
+%% @private
+%% @doc Create a md5 hash from a string.
+hashme(List) ->
+	Data = binary_to_list(erlang:md5(List)),
+	lists:flatten([io_lib:format("~.16b", [X]) || X <- Data]).
 
-application_getpublicinfo(Secret, Args) ->
-    CoreArgs = build_args([{"method", "facebook.application.getPublicInfo"} | Args]),
+%% @private
+%% @doc Return the current time as a unix epoch timestamp.
+epochnow() ->
+    calendar:datetime_to_gregorian_seconds(erlang:universaltime()).
+
+%% @private
+%% @doc Prepare an API request.
+prepare_request(ApiKey, Secret, Method, Args) ->
+	CoreArgs = build_args([{"method", Method}, {"api_key", ApiKey} | Args]),
     Sig = create_signature(dict:from_list(CoreArgs), Secret),
     Url = build_url([{"sig", Sig} | CoreArgs]),
-    submit_request(Url, fun parse_json/1).
+	raw_request("GET", Url, []).
 
-profile_getinfo(Secret, Args) ->
-    CoreArgs = build_args([{"method", "facebook.profile.getInfo"} | Args]),
-    Sig = create_signature(dict:from_list(CoreArgs), Secret),
-    Url = build_url([{"sig", Sig} | CoreArgs]),
-    submit_request(Url, fun parse_json/1).
+%% @doc Create an application.getPublicInfo API request.
+application_getpublicinfo(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.application.getPublicInfo", Args).
 
-users_isappuser(Secret, Args) ->
-    CoreArgs = build_args([{"method", "facebook.users.isAppUser"} | Args]),
-    Sig = create_signature(dict:from_list(CoreArgs), Secret),
-    Url = build_url([{"sig", Sig} | CoreArgs]),
-    submit_request(Url, fun parse_json/1).
+%% @doc Create a profile.getInfo API request.
+profile_getinfo(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.profile.getInfo", Args).
 
-custom(Secret, Args) ->
-    CoreArgs = build_args(Args),
-    Sig = create_signature(dict:from_list(CoreArgs), Secret),
-    Url = build_url([{"sig", Sig} | CoreArgs]),
-    submit_request(Url, fun parse_json/1).
+%% @doc Create a feed.publishUserAction API request.
+feed_publishuseraction(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.feed.publishUserAction", Args).
 
-%% ---
+%% @doc Create a user.hasAppPermission API request.
+users_hasapppermission(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.users.hasAppPermission", Args).
+
+%% @doc Create a users.isAppUser API request.
+users_isappuser(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.users.isAppUser", Args).
+
+%% @doc Create a profile.setFBML API request.
+profile_setfbml(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.profile.setFBML", Args).
+
+%% @doc Create a profile.setInfo API request.
+profile_setinfo(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.profile.setInfo", Args).
+
+%% @doc Create a custom API request.
+custom(ApiKey, Secret, Method, Args) ->
+	prepare_request(ApiKey, Secret, Method, Args).
+
+%% @private
+%% @doc Validate a set of parameters against a signature.
 validate_args(Secret, Args, Sig) ->
     FBArgs = collect_fb_args(Args, []),
     NewSig = create_signature(dict:from_list(FBArgs), Secret),
     Sig == NewSig.
 
+%% @private 
+%% @doc Parse Facebook specific parameters from a list of parameters.
 collect_fb_args([], Acc) -> Acc;
 collect_fb_args([{"fb_sig_" ++ Key, Value} | Args], Acc) ->
     collect_fb_args(Args, [{Key, Value} | Acc]);
@@ -138,6 +187,7 @@ collect_fb_args([{"fb_sig", Value} | Args], Acc) ->
 collect_fb_args([_ | Args], Acc) ->
     collect_fb_args(Args, Acc).
 
+%% @private
 from_args("fb_sig", Args) ->
     case lists:keysearch("fb_sig", 1, Args) of
         {value, {"fb_sig", Value}} -> Value;
@@ -148,65 +198,25 @@ from_args(Key, Args) ->
         {value, {_, Value}} -> Value;
         _ -> none
     end.
-    
 
-%% ---
-build_url(Args) ->
-    QueryString = build_querystring(Args),
-    lists:concat(["http://api.facebook.com/restserver.php", QueryString]).
-
-build_args(Args) -> [
-        {"call_id", integer_to_list(s3now())},
-        {"v", "1.0"},
-        {"format", "JSON"} | Args
-    ].
-
-submit_request(Url, ParseFun) ->
-    try http:request(get, {Url, [{"User-Agent", ?USER_AGENT}]}, [], []) of
-        {ok, {_Status, _Headers, Body}} -> ParseFun(Body);
-        F -> {error, F}
-    catch
-        _:_ -> {error, something_caught}
-    end.
-
-parse_json(Body) ->
-    case rfc4627:decode(Body) of
-        {ok, Response, _} -> Response;
-        _ -> {error, parse_error}
-    end.
-
-parse_xml(_Body) -> {error, unimplemented}.
-
-create_signature(Dict, Secret) ->
-    Keys = lists:sort(dict:fetch_keys(Dict)),
-    PreHash = lists:concat([[begin
-        Value = dict:fetch(Key, Dict),
-        lists:concat([Key, "=", yaws_api:url_encode(Value)])
-    end || Key <- Keys], [Secret]]),
-    hashme(PreHash).
-
-hashme(List) ->
-    BinMd5 = binary_to_list( erlang:md5(List) ),
-    Md5 = lists:flatten(io_lib:format("~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b~2.16.0b", BinMd5)),
-    Md5.
-
-s3now() ->
-    calendar:datetime_to_gregorian_seconds(erlang:universaltime()).
-
+%% @private
 build_querystring(List) -> build_querystring(List, []).
 
+%% @private
 build_querystring([], Acc) -> Acc;
 build_querystring([{Key, Value} | Tail], []) ->
-    Acc = lists:concat(["?", Key, "=", yaws_api:url_encode(Value)]),
+    Acc = lists:concat(["?", Key, "=", mochiweb_util:quote_plus(Value)]),
     build_querystring(Tail, Acc);
 build_querystring([{Key, Value} | Tail], Acc) ->
-    NewAcc = lists:concat([Acc, "&", Key, "=", yaws_api:url_encode(Value)]),
+    NewAcc = lists:concat([Acc, "&", Key, "=", mochiweb_util:quote_plus(Value)]),
     build_querystring(Tail, NewAcc).
 
+%% @doc Create a function representing a Facebook request's data.
 facebook_fun(Args) ->
     FBArgs = collect_fb_args(Args, []),
     facebook_fun(FBArgs, 1).
 
+%% @private
 facebook_fun(Args, 1) ->
     fun (in_canvas) ->
             case from_args("in_canvas", Args) of none -> false; _ -> true end;
