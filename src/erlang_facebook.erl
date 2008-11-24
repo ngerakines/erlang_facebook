@@ -116,7 +116,7 @@ create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
     PreHash = lists:concat([[begin
         Value = dict:fetch(Key, Dict),
-        mochiweb_util:urlencode([{Key, Value}])
+	lists:concat([Key, "=", Value])        
     end || Key <- Keys], [Secret]]),
     hashme(PreHash).
 
@@ -210,10 +210,10 @@ build_querystring(List) -> build_querystring(List, []).
 %% @private
 build_querystring([], Acc) -> Acc;
 build_querystring([{Key, Value} | Tail], []) ->
-    Acc = lists:concat(["?", Key, "=", mochiweb_util:quote_plus(Value)]),
+    Acc = lists:concat(["?", mochiweb_util:urlencode([{Key, Value}])]),
     build_querystring(Tail, Acc);
 build_querystring([{Key, Value} | Tail], Acc) ->
-    NewAcc = lists:concat([Acc, "&", Key, "=", mochiweb_util:quote_plus(Value)]),
+    NewAcc = lists:concat([Acc, "&", mochiweb_util:urlencode([{Key, Value}])]),
     build_querystring(Tail, NewAcc).
 
 %% @doc Create a function representing a Facebook request's data.
