@@ -116,7 +116,7 @@ create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
     PreHash = lists:concat([[begin
         Value = dict:fetch(Key, Dict),
-        lists:concat([Key, "=", mochiweb_util:quote_plus(Value)])
+        mochiweb_util:urlencode([{Key, Value}])
     end || Key <- Keys], [Secret]]),
     hashme(PreHash).
 
