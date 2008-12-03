@@ -36,20 +36,20 @@
 -version("0.2").
 
 -export([ %% API exports
-	application_getpublicinfo/3,
-	feed_publishuseraction/3,
-	profile_getinfo/3,
-	profile_setfbml/3,
-	profile_setinfo/3,
-	users_hasapppermission/3,
-	users_isappuser/3,
-	users_setstatus/3,
-	custom/4
+    application_getpublicinfo/3,
+    feed_publishuseraction/3,
+    profile_getinfo/3,
+    profile_setfbml/3,
+    profile_setinfo/3,
+    users_hasapppermission/3,
+    users_isappuser/3,
+    users_setstatus/3,
+    custom/4
 ]).
 
 -export([ %% utility exports
-	facebook_fun/1,
-	validate_args/3
+    facebook_fun/1,
+    validate_args/3
 ]).
 
 -define(USER_AGENT, "erlang_facebook/0.2").
@@ -114,17 +114,18 @@ parse_json(Body) ->
 %% @todo Get rid of the dict dependancy.
 create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
-    PreHash = lists:concat([[begin
+    PreHash = lists:concat(lists:concat([[begin
         Value = dict:fetch(Key, Dict),
-	lists:concat([Key, "=", Value])        
-    end || Key <- Keys], [Secret]]),
+        lists:concat([Key, "=", Value])        
+    end || Key <- Keys], [Secret]])),
+    io:format("prehash sign: ~p~n", [PreHash]),
     hashme(PreHash).
 
 %% @private
 %% @doc Create a md5 hash from a string.
 hashme(List) ->
-	Data = binary_to_list(erlang:md5(List)),
-	lists:flatten([io_lib:format("~.16b", [X]) || X <- Data]).
+    Data = binary_to_list(erlang:md5(List)),
+    lists:flatten([io_lib:format("~.16b", [X]) || X <- Data]).
 
 %% @private
 %% @doc Return the current time as a unix epoch timestamp.
@@ -134,46 +135,46 @@ epochnow() ->
 %% @private
 %% @doc Prepare an API request.
 prepare_request(ApiKey, Secret, Method, Args) ->
-	CoreArgs = build_args([{"method", Method}, {"api_key", ApiKey} | Args]),
+    CoreArgs = build_args([{"method", Method}, {"api_key", ApiKey} | Args]),
     Sig = create_signature(dict:from_list(CoreArgs), Secret),
     Url = build_url([{"sig", Sig} | CoreArgs]),
-	raw_request("GET", Url, []).
+    raw_request("GET", Url, []).
 
 %% @doc Create an application.getPublicInfo API request.
 application_getpublicinfo(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.application.getPublicInfo", Args).
+    prepare_request(ApiKey, Secret, "facebook.application.getPublicInfo", Args).
 
 %% @doc Create a profile.getInfo API request.
 profile_getinfo(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.profile.getInfo", Args).
+    prepare_request(ApiKey, Secret, "facebook.profile.getInfo", Args).
 
 %% @doc Create a feed.publishUserAction API request.
 feed_publishuseraction(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.feed.publishUserAction", Args).
+    prepare_request(ApiKey, Secret, "facebook.feed.publishUserAction", Args).
 
 %% @doc Create a user.hasAppPermission API request.
 users_hasapppermission(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.users.hasAppPermission", Args).
+    prepare_request(ApiKey, Secret, "facebook.users.hasAppPermission", Args).
 
 %% @doc Create a users.isAppUser API request.
 users_isappuser(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.users.isAppUser", Args).
+    prepare_request(ApiKey, Secret, "facebook.users.isAppUser", Args).
 
 %% @doc Create a users.setStatus API request.
 users_setstatus(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.users.setStatus", Args).
+    prepare_request(ApiKey, Secret, "facebook.users.setStatus", Args).
 
 %% @doc Create a profile.setFBML API request.
 profile_setfbml(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.profile.setFBML", Args).
+    prepare_request(ApiKey, Secret, "facebook.profile.setFBML", Args).
 
 %% @doc Create a profile.setInfo API request.
 profile_setinfo(ApiKey, Secret, Args) ->
-	prepare_request(ApiKey, Secret, "facebook.profile.setInfo", Args).
+    prepare_request(ApiKey, Secret, "facebook.profile.setInfo", Args).
 
 %% @doc Create a custom API request.
 custom(ApiKey, Secret, Method, Args) ->
-	prepare_request(ApiKey, Secret, Method, Args).
+    prepare_request(ApiKey, Secret, Method, Args).
 
 %% @private
 %% @doc Validate a set of parameters against a signature.
@@ -208,13 +209,8 @@ from_args(Key, Args) ->
 build_querystring(List) -> build_querystring(List, []).
 
 %% @private
-build_querystring([], Acc) -> Acc;
-build_querystring([{Key, Value} | Tail], []) ->
-    Acc = lists:concat(["?", mochiweb_util:urlencode([{Key, Value}])]),
-    build_querystring(Tail, Acc);
-build_querystring([{Key, Value} | Tail], Acc) ->
-    NewAcc = lists:concat([Acc, "&", mochiweb_util:urlencode([{Key, Value}])]),
-    build_querystring(Tail, NewAcc).
+build_querystring(Args, _) -> 
+    lists:concat(["?", mochiweb_util:urlencode(Args)]).
 
 %% @doc Create a function representing a Facebook request's data.
 facebook_fun(Args) ->
