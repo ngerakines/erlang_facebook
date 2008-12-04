@@ -41,6 +41,7 @@
 	profile_getinfo/3,
 	profile_setfbml/3,
 	profile_setinfo/3,
+	profile_setinfooptions/3,	
 	users_hasapppermission/3,
 	users_isappuser/3,
 	users_setstatus/3,
@@ -114,11 +115,11 @@ parse_json(Body) ->
 %% @todo Get rid of the dict dependancy.
 create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
-    PreHash = lists:concat([[begin
+    PreHash = lists:concat([begin
         Value = dict:fetch(Key, Dict),
         mochiweb_util:urlencode([{Key, Value}])
-    end || Key <- Keys], [Secret]]),
-    hashme(PreHash).
+    end || Key <- Keys]),
+    hashme(PreHash ++ Secret).
 
 %% @private
 %% @doc Create a md5 hash from a string.
@@ -170,6 +171,10 @@ profile_setfbml(ApiKey, Secret, Args) ->
 %% @doc Create a profile.setInfo API request.
 profile_setinfo(ApiKey, Secret, Args) ->
 	prepare_request(ApiKey, Secret, "facebook.profile.setInfo", Args).
+
+%% @doc Create a profile.setInfoOptions request.
+profile_setinfooptions(ApiKey, Secret, Args) ->
+	prepare_request(ApiKey, Secret, "facebook.profile.setInfoOptions", Args).
 
 %% @doc Create a custom API request.
 custom(ApiKey, Secret, Method, Args) ->
