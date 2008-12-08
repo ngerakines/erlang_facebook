@@ -59,7 +59,7 @@
 %% @doc Returns the Request URL for the Facebook API.
 build_url(Args) ->
     QueryString = build_querystring(Args),
-    lists:concat(["http://api.facebook.com/restserver.php", QueryString]).
+    erlang:list_to_binary(["http://api.facebook.com/restserver.php", QueryString]).
 
 %% @private
 %% @doc Returns a default list of Args used by the Facebook API.
@@ -75,13 +75,13 @@ raw_request(Type, URI, Body) ->
     gen_tcp:send(Socket, Req),
     {ok, Resp} = do_recv(Socket, []),
     gen_tcp:close(Socket),
-    {ok,_, ResponseBody} = erlang:decode_packet(http, Resp, []),
+    {ok, _, ResponseBody} = erlang:decode_packet(http, Resp, []),
     parse_json(parse_response(ResponseBody)).
 
-do_recv(Sock, Bs) ->
-    case gen_tcp:recv(Sock, 0) of
+do_recv(Socket, Bs) ->
+    case gen_tcp:recv(Socket, 0) of
         {ok, B} ->
-            do_recv(Sock, [Bs | B]);
+            do_recv(Socket, [Bs | B]);
         {error, closed} ->
             {ok, erlang:iolist_to_binary(Bs)}
     end.
@@ -122,10 +122,6 @@ create_signature(Dict, Secret) ->
         Value = dict:fetch(Key, Dict),
         [Key, "=", Value]
     end || Key <- Keys] ++ [Secret]),
-    %% PreHash = lists:concat(lists:concat([[begin
-    %%     Value = dict:fetch(Key, Dict),
-    %%     lists:concat([Key, "=", Value])        
-    %% end || Key <- Keys], [Secret]])),
     io:format("prehash sign: ~p~n", [PreHash]),
     hashme(PreHash).
 
