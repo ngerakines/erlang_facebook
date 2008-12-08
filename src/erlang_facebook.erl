@@ -82,7 +82,7 @@ do_recv(Socket, Bs) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, B} ->
             do_recv(Socket, [Bs | B]);
-        {error, closed} ->
+        {error, _} ->
             {ok, erlang:iolist_to_binary(Bs)}
     end.
 
