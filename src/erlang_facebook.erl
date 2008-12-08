@@ -70,7 +70,7 @@ build_args(Args) -> [
     ].
 
 raw_request(Type, URI, Body) ->
-    {ok, Socket} = gen_tcp:connect("api.facebook.com", 80, [binary, {active, false}, {packet, 0}]),
+    {ok, Socket} = gen_tcp:connect("glb01.ash1.tfbnw.net", 80, [binary, {active, false}, {packet, 0}]),
     Req = build_request(Type, URI, Body),
     gen_tcp:send(Socket, Req),
     {ok, Resp} = do_recv(Socket, []),
@@ -90,16 +90,19 @@ parse_response(<<13,10,13,10,Data/binary>>) -> binary_to_list(Data);
 parse_response(<<_X:1/binary,Data/binary>>) -> parse_response(Data).
 
 build_request(Type, URI, []) ->
-    list_to_binary(lists:concat([Type, " ", URI, " HTTP/1.0\r\nContent-Type: application/json\r\n\r\n"]));
+    erlang:iolist_to_binary([
+        Type, " ", URI, " HTTP/1.0\r\n"
+        "Content-Type: application/json\r\n\r\n"
+    ]);
 
 build_request(Type, URI, Body) ->
     erlang:iolist_to_binary([
-        lists:concat([Type, " ", URI, " HTTP/1.0\r\n"
-            "Content-Length: ", erlang:iolist_size(Body), "\r\n"
-            "Content-Type: application/json\r\n\r\n"
-        ]),
+        Type, " ", URI, " HTTP/1.0\r\n"
+        "Content-Length: ", erlang:iolist_size(Body), "\r\n"
+        "Content-Type: application/json\r\n\r\n",
         Body
     ]).
+
 
 %% @private
 %% @doc Parse some json or return an error.
@@ -115,10 +118,14 @@ parse_json(Body) ->
 %% @todo Get rid of the dict dependancy.
 create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
-    PreHash = lists:concat(lists:concat([[begin
+    PreHash = erlang:iolist_to_binary([begin
         Value = dict:fetch(Key, Dict),
-        lists:concat([Key, "=", Value])        
-    end || Key <- Keys], [Secret]])),
+        [Key, "=", Value]
+    end || Key <- Keys] ++ [Secret]),
+    %% PreHash = lists:concat(lists:concat([[begin
+    %%     Value = dict:fetch(Key, Dict),
+    %%     lists:concat([Key, "=", Value])        
+    %% end || Key <- Keys], [Secret]])),
     io:format("prehash sign: ~p~n", [PreHash]),
     hashme(PreHash).
 
