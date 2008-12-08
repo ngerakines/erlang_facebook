@@ -70,7 +70,7 @@ build_args(Args) -> [
     ].
 
 raw_request(Type, URI, Body) ->
-    {ok, Socket} = gen_tcp:connect("glb01.ash1.tfbnw.net", 80, [binary, {active, false}, {packet, 0}]),
+    {ok, Socket} = gen_tcp:connect("api.facebook.com", 80, [binary, {active, false}, {packet, 0}]),
     Req = build_request(Type, URI, Body),
     gen_tcp:send(Socket, Req),
     {ok, Resp} = do_recv(Socket, []),
