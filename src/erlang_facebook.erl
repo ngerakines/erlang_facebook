@@ -122,7 +122,6 @@ create_signature(Dict, Secret) ->
         Value = dict:fetch(Key, Dict),
         [Key, "=", Value]
     end || Key <- Keys] ++ [Secret]),
-    io:format("prehash sign: ~p~n", [PreHash]),
     hashme(PreHash).
 
 %% @private
