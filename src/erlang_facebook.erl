@@ -59,7 +59,7 @@
 %% @doc Returns the Request URL for the Facebook API.
 build_url(Args) ->
     QueryString = build_querystring(Args),
-    lists:concat(["http://api.facebook.com/restserver.php", QueryString]).
+    erlang:list_to_binary(["http://api.facebook.com/restserver.php", QueryString]).
 
 %% @private
 %% @doc Returns a default list of Args used by the Facebook API.
@@ -75,14 +75,14 @@ raw_request(Type, URI, Body) ->
     gen_tcp:send(Socket, Req),
     {ok, Resp} = do_recv(Socket, []),
     gen_tcp:close(Socket),
-    {ok,_, ResponseBody} = erlang:decode_packet(http, Resp, []),
+    {ok, _, ResponseBody} = erlang:decode_packet(http, Resp, []),
     parse_json(parse_response(ResponseBody)).
 
-do_recv(Sock, Bs) ->
-    case gen_tcp:recv(Sock, 0) of
+do_recv(Socket, Bs) ->
+    case gen_tcp:recv(Socket, 0) of
         {ok, B} ->
-            do_recv(Sock, [Bs | B]);
-        {error, _} ->
+            do_recv(Socket, [Bs | B]);
+        _ ->
             {ok, erlang:iolist_to_binary(Bs)}
     end.
 
@@ -90,16 +90,19 @@ parse_response(<<13,10,13,10,Data/binary>>) -> binary_to_list(Data);
 parse_response(<<_X:1/binary,Data/binary>>) -> parse_response(Data).
 
 build_request(Type, URI, []) ->
-    list_to_binary(lists:concat([Type, " ", URI, " HTTP/1.0\r\nContent-Type: application/json\r\n\r\n"]));
+    erlang:iolist_to_binary([
+        Type, " ", URI, " HTTP/1.0\r\n"
+        "Content-Type: application/json\r\n\r\n"
+    ]);
 
 build_request(Type, URI, Body) ->
     erlang:iolist_to_binary([
-        lists:concat([Type, " ", URI, " HTTP/1.0\r\n"
-            "Content-Length: ", erlang:iolist_size(Body), "\r\n"
-            "Content-Type: application/json\r\n\r\n"
-        ]),
+        Type, " ", URI, " HTTP/1.0\r\n"
+        "Content-Length: ", erlang:iolist_size(Body), "\r\n"
+        "Content-Type: application/json\r\n\r\n",
         Body
     ]).
+
 
 %% @private
 %% @doc Parse some json or return an error.
@@ -115,11 +118,10 @@ parse_json(Body) ->
 %% @todo Get rid of the dict dependancy.
 create_signature(Dict, Secret) ->
     Keys = lists:sort(dict:fetch_keys(Dict)),
-    PreHash = lists:concat(lists:concat([[begin
+    PreHash = erlang:iolist_to_binary([begin
         Value = dict:fetch(Key, Dict),
-        lists:concat([Key, "=", Value])        
-    end || Key <- Keys], [Secret]])),
-    io:format("prehash sign: ~p~n", [PreHash]),
+        [Key, "=", Value]
+    end || Key <- Keys] ++ [Secret]),
     hashme(PreHash).
 
 %% @private
