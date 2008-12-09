@@ -75,8 +75,12 @@ raw_request(Type, URI, Body) ->
     gen_tcp:send(Socket, Req),
     {ok, Resp} = do_recv(Socket, []),
     gen_tcp:close(Socket),
-    {ok, _, ResponseBody} = erlang:decode_packet(http, Resp, []),
-    parse_json(parse_response(ResponseBody)).
+    case erlang:decode_packet(http, Resp, []) of
+        {ok, _, ResponseBody} ->
+            parse_json(parse_response(ResponseBody));
+        _ ->
+            {error, parse_error}
+    end.
 
 do_recv(Socket, Bs) ->
     case gen_tcp:recv(Socket, 0) of
