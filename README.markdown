@@ -1,9 +1,8 @@
-
 erlang\_facebook is a small, lightweight Facebook Platform API client library.
 
     1> [ApiKey, Secret] = ["aassdd112233", "thisisasecret"].
     ["aassdd112233", "thisisasecret"].
-    2> erlang_facebook:custom("cde8787f00c10c06e8a6d562aa4f129a", "731f603780c47354cacdd9d2f0c14f8d", "facebook.users.hasAppPermission", [{"uid", "500025891"}, {"ext_perm", "offline_access"}]).
+    2> erlang_facebook:custom(ApiKey, Secret, "facebook.users.hasAppPermission", [{"uid", "500025891"}, {"ext_perm", "offline_access"}]).
     [true]
 
 This library is developed and updated as needed. To request a feature or if you found a bug, please contact me through GitHub (account is ngerakines) or email me at [nick+erlang\_facebook@gerakines.net](mailto:nick+erlang_facebook@gerakines.net).
