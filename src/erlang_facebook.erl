@@ -22,18 +22,26 @@
 %% OTHER DEALINGS IN THE SOFTWARE.
 %% 
 %% Change Log:
+%% * 2008-12-13 ngerakines
+%%   - Added more documentation
+%%   - Updated version references throughout module
+%% * v0.3.1 ngerakines
+%%   - Bug fix release
+%% * v0.3 ngerakines
+%%   - Added additional modules, moved completely away form all yaws deps
 %% * v0.2 2008-11-15: ngerakines
 %%   - Substantial code rewrite and reorg.
 %%   - Move away from the gen_server model.
 %% 
 %% @author Nick Gerakines <nick@gerakines.net>
 %% @copyright 2008 Nick Gerakines
-%% @version 0.2
-%% @doc A simple Facebook Platform API interface in Erlang.
+%% @version 0.3.1
 %% @todo Add support for more Facebook Platform API methods.
+%% @doc A simple Facebook Platform API interface in Erlang.
+%% This module requires Erlang/OTP 12-5.
 -module(erlang_facebook).
 -author("Nick Gerakines <nick@gerakines.net>").
--version("0.2").
+-version("0.3.1").
 
 -export([ %% API exports
 	application_getpublicinfo/3,
@@ -53,7 +61,7 @@
     validate_args/3
 ]).
 
--define(USER_AGENT, "erlang_facebook/0.2").
+-define(USER_AGENT, "erlang_facebook/0.3.1").
 
 %% @private
 %% @doc Returns the Request URL for the Facebook API.
@@ -69,6 +77,11 @@ build_args(Args) -> [
         {"format", "JSON"} | Args
     ].
 
+%% @private
+%% @doc Create an HTTP request to the Facebook Platform. This is done through
+%% a raw gen_tcp connection instead of inets to be fask and light weight.
+%% Please be aware that the erlang:decode_packet/3 function call is only
+%% available in 12-5 and later.
 raw_request(Type, URI, Body) ->
     {ok, Socket} = gen_tcp:connect("api.facebook.com", 80, [binary, {active, false}, {packet, 0}]),
     Req = build_request(Type, URI, Body),
@@ -82,6 +95,7 @@ raw_request(Type, URI, Body) ->
             {error, parse_error}
     end.
 
+%% @private
 do_recv(Socket, Bs) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, B} ->
@@ -90,9 +104,14 @@ do_recv(Socket, Bs) ->
             {ok, erlang:iolist_to_binary(Bs)}
     end.
 
+%% @private
+%% @doc Parse the response from the Facebook Platform, disregarding
+%% everything but the actual body/payload of the response.
 parse_response(<<13,10,13,10,Data/binary>>) -> binary_to_list(Data);
 parse_response(<<_X:1/binary,Data/binary>>) -> parse_response(Data).
 
+%% @private
+%% @doc Create an HTTP 1.0 valid request for a given method, uri and body.
 build_request(Type, URI, []) ->
     erlang:iolist_to_binary([
         Type, " ", URI, " HTTP/1.0\r\n"
@@ -140,7 +159,8 @@ epochnow() ->
     calendar:datetime_to_gregorian_seconds(erlang:universaltime()).
 
 %% @private
-%% @doc Prepare an API request.
+%% @doc Prepare an API request. At this point the request signature is
+%% created and the raw HTTP request is sent and processed.
 prepare_request(ApiKey, Secret, Method, Args) ->
     CoreArgs = build_args([{"method", Method}, {"api_key", ApiKey} | Args]),
     Sig = create_signature(dict:from_list(CoreArgs), Secret),
@@ -187,7 +207,6 @@ profile_setinfooptions(ApiKey, Secret, Args) ->
 custom(ApiKey, Secret, Method, Args) ->
     prepare_request(ApiKey, Secret, Method, Args).
 
-%% @private
 %% @doc Validate a set of parameters against a signature.
 validate_args(Secret, Args, Sig) ->
     FBArgs = collect_fb_args(Args, []),
@@ -205,6 +224,7 @@ collect_fb_args([_ | Args], Acc) ->
     collect_fb_args(Args, Acc).
 
 %% @private
+%% @doc Parse fb_sig_* variables from a Facebook Platform request.
 from_args("fb_sig", Args) ->
     case lists:keysearch("fb_sig", 1, Args) of
         {value, {"fb_sig", Value}} -> Value;
@@ -228,7 +248,11 @@ facebook_fun(Args) ->
     FBArgs = collect_fb_args(Args, []),
     facebook_fun(FBArgs, 1).
 
-%% @private
+%% @doc Returns an anonymous function that represents several important
+%% variables from a Facebook Platform request. At this point the only
+%% variables returned include 'in_canvas' (bool), 'sig' (string),
+%% 'friends' (list of strings), 'added' (bool), 'session' (string),
+%% and 'user' (string).
 facebook_fun(Args, 1) ->
     fun (in_canvas) ->
             case from_args("in_canvas", Args) of none -> false; _ -> true end;

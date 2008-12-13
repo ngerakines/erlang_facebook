@@ -1,4 +1,4 @@
-erlang\_facebook is a small, lightweight Facebook Platform API client library.
+erlang\_facebook is a small, lightweight Facebook Platform API client library. It provides several utility functions for request verification and processing as well.
 
     1> [ApiKey, Secret] = ["aassdd112233", "thisisasecret"].
     ["aassdd112233", "thisisasecret"].
@@ -15,7 +15,7 @@ To use a method that is not defined the erlang\_facebook:custom/4 function can b
 
 ## Dependancies
 
-This module uses the mochijson2 library for encoding and decoding requests and responses to and from the Facebook Platform.
+This module requires MochiWeb, specifically the mochijson2 and mochiweb\_util modules.
 
 ## Acknowledgements
 
