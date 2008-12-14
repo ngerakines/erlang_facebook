@@ -25,7 +25,7 @@
 %% * 2008-12-13 ngerakines
 %%   - Added more documentation
 %%   - Updated version references throughout module
-%% * v0.3.1 ngerakines
+%% * v0.3.2 ngerakines
 %%   - Bug fix release
 %% * v0.3 ngerakines
 %%   - Added additional modules, moved completely away form all yaws deps
@@ -35,13 +35,13 @@
 %% 
 %% @author Nick Gerakines <nick@gerakines.net>
 %% @copyright 2008 Nick Gerakines
-%% @version 0.3.1
+%% @version 0.3.2
 %% @todo Add support for more Facebook Platform API methods.
 %% @doc A simple Facebook Platform API interface in Erlang.
 %% This module requires Erlang/OTP 12-5.
 -module(erlang_facebook).
 -author("Nick Gerakines <nick@gerakines.net>").
--version("0.3.1").
+-version("0.3.2").
 
 -export([ %% API exports
 	application_getpublicinfo/3,
@@ -61,7 +61,7 @@
     validate_args/3
 ]).
 
--define(USER_AGENT, "erlang_facebook/0.3.1").
+-define(USER_AGENT, "erlang_facebook/0.3.2").
 
 %% @private
 %% @doc Returns the Request URL for the Facebook API.

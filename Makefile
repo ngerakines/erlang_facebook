@@ -7,4 +7,4 @@ clean:
 	rm -rfv *.beam erl_crash.dump
 
 dist-src: clean
-	tar zcvf erlang_facebook-0.3.1.tgz Makefile README.markdown src/
+	tar zcvf erlang_facebook-0.3.2.tgz Makefile README.markdown src/
