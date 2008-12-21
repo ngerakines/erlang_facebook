@@ -1,1 +1,101 @@
-My GitHub Page
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Module erlang_facebook</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module erlang_facebook</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>A simple Facebook Platform API interface in Erlang.
+<p>Copyright © 2008 Nick Gerakines</p>
+
+<p><b>Version:</b> 0.3.2</p>
+<p><b>Authors:</b> Nick Gerakines (<a href="mailto:nick@gerakines.net"><tt>nick@gerakines.net</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>A simple Facebook Platform API interface in Erlang.
+  This module requires Erlang/OTP 12-5.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#application_getpublicinfo-3">application_getpublicinfo/3</a></td><td>Create an application.getPublicInfo API request.</td></tr>
+<tr><td valign="top"><a href="#custom-4">custom/4</a></td><td>Create a custom API request.</td></tr>
+<tr><td valign="top"><a href="#facebook_fun-1">facebook_fun/1</a></td><td>Create a function representing a Facebook request's data.</td></tr>
+<tr><td valign="top"><a href="#feed_publishuseraction-3">feed_publishuseraction/3</a></td><td>Create a feed.publishUserAction API request.</td></tr>
+<tr><td valign="top"><a href="#profile_getinfo-3">profile_getinfo/3</a></td><td>Create a profile.getInfo API request.</td></tr>
+<tr><td valign="top"><a href="#profile_setfbml-3">profile_setfbml/3</a></td><td>Create a profile.setFBML API request.</td></tr>
+<tr><td valign="top"><a href="#profile_setinfo-3">profile_setinfo/3</a></td><td>Create a profile.setInfo API request.</td></tr>
+<tr><td valign="top"><a href="#profile_setinfooptions-3">profile_setinfooptions/3</a></td><td>Create a profile.setInfoOptions request.</td></tr>
+<tr><td valign="top"><a href="#users_hasapppermission-3">users_hasapppermission/3</a></td><td>Create a user.hasAppPermission API request.</td></tr>
+<tr><td valign="top"><a href="#users_isappuser-3">users_isappuser/3</a></td><td>Create a users.isAppUser API request.</td></tr>
+<tr><td valign="top"><a href="#users_setstatus-3">users_setstatus/3</a></td><td>Create a users.setStatus API request.</td></tr>
+<tr><td valign="top"><a href="#validate_args-3">validate_args/3</a></td><td>Validate a set of parameters against a signature.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="application_getpublicinfo-3">application_getpublicinfo/3</a></h3>
+<div class="spec">
+<p><tt>application_getpublicinfo(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create an application.getPublicInfo API request.</p>
+
+<h3 class="function"><a name="custom-4">custom/4</a></h3>
+<div class="spec">
+<p><tt>custom(ApiKey, Secret, Method, Args) -&gt; any()</tt></p>
+</div><p>Create a custom API request.</p>
+
+<h3 class="function"><a name="facebook_fun-1">facebook_fun/1</a></h3>
+<div class="spec">
+<p><tt>facebook_fun(Args) -&gt; any()</tt></p>
+</div><p>Create a function representing a Facebook request's data.</p>
+
+<h3 class="function"><a name="feed_publishuseraction-3">feed_publishuseraction/3</a></h3>
+<div class="spec">
+<p><tt>feed_publishuseraction(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a feed.publishUserAction API request.</p>
+
+<h3 class="function"><a name="profile_getinfo-3">profile_getinfo/3</a></h3>
+<div class="spec">
+<p><tt>profile_getinfo(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a profile.getInfo API request.</p>
+
+<h3 class="function"><a name="profile_setfbml-3">profile_setfbml/3</a></h3>
+<div class="spec">
+<p><tt>profile_setfbml(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a profile.setFBML API request.</p>
+
+<h3 class="function"><a name="profile_setinfo-3">profile_setinfo/3</a></h3>
+<div class="spec">
+<p><tt>profile_setinfo(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a profile.setInfo API request.</p>
+
+<h3 class="function"><a name="profile_setinfooptions-3">profile_setinfooptions/3</a></h3>
+<div class="spec">
+<p><tt>profile_setinfooptions(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a profile.setInfoOptions request.</p>
+
+<h3 class="function"><a name="users_hasapppermission-3">users_hasapppermission/3</a></h3>
+<div class="spec">
+<p><tt>users_hasapppermission(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a user.hasAppPermission API request.</p>
+
+<h3 class="function"><a name="users_isappuser-3">users_isappuser/3</a></h3>
+<div class="spec">
+<p><tt>users_isappuser(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a users.isAppUser API request.</p>
+
+<h3 class="function"><a name="users_setstatus-3">users_setstatus/3</a></h3>
+<div class="spec">
+<p><tt>users_setstatus(ApiKey, Secret, Args) -&gt; any()</tt></p>
+</div><p>Create a users.setStatus API request.</p>
+
+<h3 class="function"><a name="validate_args-3">validate_args/3</a></h3>
+<div class="spec">
+<p><tt>validate_args(Secret, Args, Sig) -&gt; any()</tt></p>
+</div><p>Validate a set of parameters against a signature.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Dec 20 2008, 18:24:10.</i></p>
+</body>
+</html>
