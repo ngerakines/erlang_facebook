@@ -48,6 +48,7 @@
 -export([ %% API exports
 	application_getpublicinfo/3,
 	feed_publishuseraction/3,
+	fbml_refreshrefurl/3,
 	profile_getinfo/3,
 	profile_setfbml/3,
 	profile_setinfo/3,
@@ -196,6 +197,10 @@ users_setstatus(ApiKey, Secret, Args) ->
 %% @doc Create a profile.setFBML API request.
 profile_setfbml(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.profile.setFBML", Args).
+
+%% @doc Create a profile.setFBML API request.
+fbml_refreshrefurl(ApiKey, Secret, Args) ->
+    prepare_request(ApiKey, Secret, "facebook.fbml.refreshRefUrl", Args).
 
 %% @doc Create a profile.setInfo API request.
 profile_setinfo(ApiKey, Secret, Args) ->
