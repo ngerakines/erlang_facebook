@@ -22,6 +22,8 @@
 %% OTHER DEALINGS IN THE SOFTWARE.
 %% 
 %% Change Log:
+%% * 2009-01-01 ngerakines
+%%   - Updated call_id generation function
 %% * 2008-12-13 ngerakines
 %%   - Added more documentation
 %%   - Updated version references throughout module
@@ -72,7 +74,7 @@ build_url(Args) ->
 %% @private
 %% @doc Returns a default list of Args used by the Facebook API.
 build_args(Args) -> [
-        {"call_id", integer_to_list(epochnow())},
+        {"call_id", integer_to_list(utime())},
         {"v", "1.0"},
         {"format", "JSON"} | Args
     ].
@@ -154,9 +156,9 @@ hashme(List) ->
     lists:flatten([io_lib:format("~.16b", [X]) || X <- Data]).
 
 %% @private
-%% @doc Return the current time as a unix epoch timestamp.
-epochnow() ->
-    calendar:datetime_to_gregorian_seconds(erlang:universaltime()).
+%% @doc Return a unique incrementing integer.
+utime() ->
+    {Mes, S, Mis} = erlang:now(), Mes * S + Mis.
 
 %% @private
 %% @doc Prepare an API request. At this point the request signature is
