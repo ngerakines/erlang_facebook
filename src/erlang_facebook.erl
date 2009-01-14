@@ -153,8 +153,18 @@ create_signature(Dict, Secret) ->
 %% @private
 %% @doc Create a md5 hash from a string.
 hashme(List) ->
-    Data = binary_to_list(erlang:md5(List)),
-    lists:flatten([io_lib:format("~.16b", [X]) || X <- Data]).
+    Md5_list = binary_to_list(erlang:md5(List)),
+    lists:flatten(list_to_hex(Md5_list)).
+
+%% @private
+list_to_hex(L) -> lists:map(fun(X) -> int_to_hex(X) end, L).
+
+%% @private
+int_to_hex(N) when N < 256 -> [hex(N div 16), hex(N rem 16)].
+
+%% @private
+hex(N) when N < 10 -> $0 + N;
+hex(N) when N >= 10, N < 16 -> $a + (N - 10).
 
 %% @private
 %% @doc Return a unique incrementing integer.
