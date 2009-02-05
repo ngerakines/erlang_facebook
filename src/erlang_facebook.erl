@@ -22,6 +22,8 @@
 %% OTHER DEALINGS IN THE SOFTWARE.
 %% 
 %% Change Log:
+%% * 2009-02-04 ngerakines
+%%   - Added fql_query/3
 %% * 2009-01-01 ngerakines
 %%   - Updated call_id generation function
 %% * 2008-12-13 ngerakines
@@ -49,6 +51,7 @@
 	application_getpublicinfo/3,
 	feed_publishuseraction/3,
 	fbml_refreshrefurl/3,
+	fql_query/3,
 	profile_getinfo/3,
 	profile_setfbml/3,
 	profile_setinfo/3,
@@ -211,6 +214,10 @@ profile_setfbml(ApiKey, Secret, Args) ->
 %% @doc Create a profile.setFBML API request.
 fbml_refreshrefurl(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.fbml.refreshRefUrl", Args).
+
+%% @doc Create a fql.query API request.
+fql_query(ApiKey, Secret, Args) ->
+    prepare_request(ApiKey, Secret, "facebook.fql.query", Args).
 
 %% @doc Create a profile.setInfo API request.
 profile_setinfo(ApiKey, Secret, Args) ->
