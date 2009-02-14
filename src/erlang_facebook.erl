@@ -59,6 +59,7 @@
 	users_hasapppermission/3,
 	users_isappuser/3,
 	users_setstatus/3,
+	users_getinfo/3,
 	custom/4
 ]).
 
@@ -206,6 +207,10 @@ users_isappuser(ApiKey, Secret, Args) ->
 %% @doc Create a users.setStatus API request.
 users_setstatus(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.users.setStatus", Args).
+
+%% @doc Create a users.getInfo API request.
+users_getinfo(ApiKey, Secret, Args) ->
+    prepare_request(ApiKey, Secret, "facebook.users.getInfo", Args).
 
 %% @doc Create a profile.setFBML API request.
 profile_setfbml(ApiKey, Secret, Args) ->
