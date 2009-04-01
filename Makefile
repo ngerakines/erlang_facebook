@@ -18,5 +18,5 @@ package: clean
 	@rm -rf erlang_facebook-$(VERSION)/
 
 install:
-	mkdir -p $(prefix)/$(LIBDIR)/erlang_facebook-$(VERSION)/{ebin,include}
-	for i in include/*.hrl ebin/*.beam; do install $$i $(prefix)/$(LIBDIR)/erlang_facebook-$(VERSION)/$$i ; done
+	mkdir -p $(prefix)/$(LIBDIR)/erlang_facebook-$(VERSION)/ebin
+	for i in ebin/*.beam; do install $$i $(prefix)/$(LIBDIR)/erlang_facebook-$(VERSION)/$$i ; done
