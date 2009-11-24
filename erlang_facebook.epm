@@ -1,6 +1,6 @@
 [
 	{deps, [
-		{mochiweb, [{tag, "1.0"}]},
-		{etap, [{branch, "master"}]}
+		{"ngerakines/mochiweb", [{tag, "1.0"}]},
+		{"ngerakines/etap", [{branch, "master"}]}
 	]}
 ].
