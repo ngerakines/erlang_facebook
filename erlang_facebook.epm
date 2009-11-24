@@ -1,0 +1,6 @@
+[
+	{deps, [
+		{mochiweb, [{tag, "1.0"}]},
+		{etap, [{branch, "master"}]}
+	]}
+].
