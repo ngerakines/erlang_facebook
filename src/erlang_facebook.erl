@@ -49,19 +49,22 @@
 
 -export([ %% API exports
 	application_getpublicinfo/3,
-	feed_publishuseraction/3,
 	fbml_refreshrefurl/3,
 	fql_query/3,
-	profile_getinfo/3,
-	profile_setfbml/3,
-	profile_setinfo/3,
-	profile_setinfooptions/3,	
 	users_hasapppermission/3,
 	users_isappuser/3,
 	users_setstatus/3,
 	users_getinfo/3,
     users_getloggedinuser/3,
 	custom/4
+]).
+
+-export([ %% API Deprecated exports
+    feed_publishuseraction/3,
+    profile_getinfo/3,
+    profile_setfbml/3,
+    profile_setinfo/3,
+    profile_setinfooptions/3   
 ]).
 
 -export([ %% utility exports
@@ -189,11 +192,11 @@ prepare_request(ApiKey, Secret, Method, Args) ->
 application_getpublicinfo(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.application.getPublicInfo", Args).
 
-%% @doc Create a profile.getInfo API request.
+%% @doc Deprecated. Create a profile.getInfo API request.
 profile_getinfo(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.profile.getInfo", Args).
 
-%% @doc Create a feed.publishUserAction API request.
+%% @doc Deprecated. Create a feed.publishUserAction API request.
 feed_publishuseraction(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.feed.publishUserAction", Args).
 
@@ -217,11 +220,11 @@ users_getinfo(ApiKey, Secret, Args) ->
 users_getloggedinuser(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.users.getLoggedInUser", Args).
 
-%% @doc Create a profile.setFBML API request.
+%% @doc Deprecated. Create a profile.setFBML API request.
 profile_setfbml(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.profile.setFBML", Args).
 
-%% @doc Create a profile.setFBML API request.
+%% @doc Deprecated. Create a profile.setFBML API request.
 fbml_refreshrefurl(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.fbml.refreshRefUrl", Args).
 
@@ -229,11 +232,11 @@ fbml_refreshrefurl(ApiKey, Secret, Args) ->
 fql_query(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.fql.query", Args).
 
-%% @doc Create a profile.setInfo API request.
+%% @doc Deprecated. Create a profile.setInfo API request.
 profile_setinfo(ApiKey, Secret, Args) ->
     prepare_request(ApiKey, Secret, "facebook.profile.setInfo", Args).
 
-%% @doc Create a profile.setInfoOptions request.
+%% @doc Deprecated. Create a profile.setInfoOptions request.
 profile_setinfooptions(ApiKey, Secret, Args) ->
 	prepare_request(ApiKey, Secret, "facebook.profile.setInfoOptions", Args).
 
