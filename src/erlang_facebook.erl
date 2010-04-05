@@ -74,7 +74,7 @@
 %% @doc Returns the Request URL for the Facebook API.
 build_url(Args) ->
     QueryString = build_querystring(Args),
-    erlang:list_to_binary(["http://api.facebook.com/restserver.php", QueryString]).
+    erlang:list_to_binary(["/restserver.php", QueryString]).
 
 %% @private
 %% @doc Returns a default list of Args used by the Facebook API.
